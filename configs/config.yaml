@@ -1,0 +1,19 @@
+defaults:
+  - paths: default
+  - data: dummy_rgb
+  - model: dinov3_upernet
+  - optimizer: adamw
+  - scheduler: cosine
+  - trainer: default
+  - callbacks: default
+  - logger: csv
+  - experiment: null
+  # After `experiment`, so protocol values override the experiment's.
+  - protocol: none
+  - _self_
+
+seed: 0
+# Checkpoint evaluated by scripts/test.py.
+ckpt_path: null
+# `reference_batch_size` is set per experiment, not here: `_self_` is applied last and
+# would override it.

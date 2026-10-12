@@ -1,0 +1,21 @@
+# @package _global_
+# DINOv3 ViT-B/16 (LVD-1689M) + UperNet on MADOS RGB, fine-tuned. Needs Meta's gated .pth.
+defaults:
+  - override /data: mados_rgb
+  - override /model: dinov3_upernet_base
+  - override /trainer: default
+  - _self_
+
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: false
+  # Encoder LR at 0.1x the reference LR of 2e-4.
+  lr_overrides:
+    encoder: 2.0e-5
+  model_args:
+    backbone_kwargs:
+      ckpt_path: ${paths.weights_root}/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth

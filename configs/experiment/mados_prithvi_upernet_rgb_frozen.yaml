@@ -1,0 +1,19 @@
+# @package _global_
+# Prithvi-EO-2.0 100M + UperNet on MADOS RGB, frozen encoder.
+defaults:
+  - override /data: mados_rgb
+  - override /model: prithvi_upernet
+  - override /trainer: default
+  - _self_
+
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: true
+  lr_overrides: null
+  model_args:
+    backbone_kwargs:
+      pretrained: true

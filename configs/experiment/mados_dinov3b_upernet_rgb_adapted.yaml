@@ -1,0 +1,21 @@
+# @package _global_
+# Domain-adapted DINOv3 ViT-B/16 + UperNet on MADOS RGB, fine-tuned. Differs from
+# mados_dinov3b_upernet_rgb only in `ckpt_path` (scripts/download_weights.py).
+defaults:
+  - override /data: mados_rgb
+  - override /model: dinov3_upernet_base
+  - override /trainer: default
+  - _self_
+
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: false
+  lr_overrides:
+    encoder: 2.0e-5
+  model_args:
+    backbone_kwargs:
+      ckpt_path: ${paths.weights_root}/dinov3_vitb16_subaqua_adapted.pth

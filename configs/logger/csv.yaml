@@ -1,0 +1,5 @@
+# Metrics CSV in the run directory. `trainer.logger=false` disables logging.
+_target_: lightning.pytorch.loggers.CSVLogger
+save_dir: ${hydra:runtime.output_dir}
+name: ""
+version: ""

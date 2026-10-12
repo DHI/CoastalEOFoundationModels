@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.claude/
+wandb/
+outputs/
+multirun/
+results/
+# Anchored so that configs/data/ and src/aquafm/data/ are not ignored.
+/data/
+/weights/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/

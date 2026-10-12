@@ -1,0 +1,13 @@
+This repository contains code under two licenses.
+
+1. Apache License 2.0 (LICENSE): everything not listed under 2.
+
+2. DINOv3 License (LICENSE-DINOv3.md), as derivatives of Meta's DINOv3 Materials:
+   - fino_patches/ (patches, dataset shim and training config for the dinov3 FINO branch)
+   - src/aquafm/adaptation/vision_dataset.py (adapted from dinov3/data/datasets/extended.py)
+   - the adapted checkpoint dinov3_vitb16_subaqua_adapted.pth (distributed separately)
+
+DINOv3 is Copyright (c) Meta Platforms, Inc. and affiliates.
+
+The tropical coastal corpus (distributed separately on Zenodo) is licensed under CC BY-NC 4.0
+and contains modified Copernicus Sentinel data.

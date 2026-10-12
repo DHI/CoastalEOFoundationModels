@@ -1,0 +1,14 @@
+# @package _global_
+# ResNet18 UNet baseline, random init, on synthetic RGB data.
+defaults:
+  - override /data: dummy_rgb
+  - override /model: baseline_unet
+  - override /trainer: default
+  - _self_
+
+trainer:
+  max_epochs: 20
+
+model:
+  model_args:
+    pretrained: false

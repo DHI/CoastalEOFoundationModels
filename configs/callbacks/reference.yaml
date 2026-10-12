@@ -1,0 +1,21 @@
+# Callbacks of the MADOS reference recipe: no early stopping, weight EMA. The paper evaluates
+# the best-on-validation checkpoint (`best-*.ckpt`); `last.ckpt` is saved as well.
+model_checkpoint:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  monitor: val/mIoU
+  mode: max
+  save_top_k: 1
+  save_last: true
+  dirpath: ${hydra:runtime.output_dir}/checkpoints
+  filename: best-epoch{epoch:03d}-step{step:06d}
+  auto_insert_metric_name: false
+
+# The reference's `timm.utils.ModelEma(decay=0.999)`. Validation and checkpoints use the
+# EMA weights.
+ema:
+  _target_: lightning.pytorch.callbacks.EMAWeightAveraging
+  decay: 0.999
+
+lr_monitor:
+  _target_: lightning.pytorch.callbacks.LearningRateMonitor
+  logging_interval: epoch

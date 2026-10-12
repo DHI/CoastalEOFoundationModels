@@ -1,0 +1,41 @@
+# Supervised ImageNet ViT-B/16 + UperNet, the architecture of dinov3_upernet_base with
+# different pretraining. RGB only; weights download on first use.
+_target_: aquafm.tasks.AquaSegmentationTask
+model_factory: EncoderDecoderFactory
+model_args:
+  # timm model through TerraTorch; `augreg_in21k_ft_in1k` are supervised weights.
+  backbone: timm_vit_base_patch16_224.augreg_in21k_ft_in1k
+  backbone_kwargs:
+    pretrained: true
+    # timm resamples the pretrained position embedding to this size at load time.
+    img_size: ${data.img_size}
+    # EncoderDecoderFactory probes the backbone with 256 px inputs, which a fixed-size ViT rejects.
+    dynamic_img_size: true
+    # Returns NCHW maps for `out_indices`, so no token-reshaping necks are needed.
+    features_only: true
+    out_indices: [2, 5, 8, 11]
+  necks:
+    - name: LearnedInterpolateToPyramidal
+  decoder: UperNetDecoder
+  num_classes: ${data.num_classes}
+loss: ce
+# -1 marks unannotated pixels.
+ignore_index: -1
+class_names: ${oc.select:data.class_names}
+class_weights: ${oc.select:data.class_weights}
+lr: 1.0e-4
+# Per-parameter-group LRs, matched by substring of the parameter name.
+lr_overrides: null
+optimizer: ${optimizer.name}
+optimizer_hparams: ${optimizer.hparams}
+scheduler: ${scheduler.name}
+scheduler_hparams: ${scheduler.hparams}
+freeze_backbone: false
+freeze_decoder: false
+plot_on_val: false
+
+# Test-time options, see aquafm.tasks.segmentation.
+tta: false
+tta_aggregation: vote
+extended_per_class_metrics: false
+confusion_matrix: false

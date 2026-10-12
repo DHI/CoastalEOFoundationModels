@@ -1,0 +1,5 @@
+_target_: lightning.pytorch.loggers.WandbLogger
+project: aquafm-bench
+name: null
+offline: false
+save_dir: ${hydra:runtime.output_dir}

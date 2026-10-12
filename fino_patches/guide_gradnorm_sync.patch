@@ -1,0 +1,48 @@
+diff --git a/dinov3/train/guided_ssl_meta_arch.py b/dinov3/train/guided_ssl_meta_arch.py
+index a8d6519..f55bd88 100644
+--- a/dinov3/train/guided_ssl_meta_arch.py
++++ b/dinov3/train/guided_ssl_meta_arch.py
+@@ -289,18 +289,40 @@ class GuidedSSLMetaArch(SSLMetaArch):
+             grad = torch.autograd.grad(
+                 per_guide_weighted[name], backbone_output, retain_graph=True, allow_unused=True
+             )[0]
+-            norm = (
++            norms[name] = (
+                 grad.float().norm()
+                 if grad is not None
+                 else torch.tensor(0.0, device=device)
+             )
+-            norms[name] = norm
+-            loss_dict[f"grad_norm/{name}"] = norm
++
++        # Average the norms across ranks before anything branches on them.
++        # The `eps` checks below decide which keys go into `loss_dict`, which
++        # train.py all-reduces as one tensor; rank-local decisions can give
++        # tensors of different lengths and NCCL then hangs. SUM/n is used
++        # because gloo does not implement ReduceOp.AVG.
++        subgroup_size = distributed.get_subgroup_size()
++        if subgroup_size > 1:
++            norm_vec = torch.stack([norms[name] for name in names]).detach()
++            torch.distributed.all_reduce(
++                norm_vec,
++                op=torch.distributed.ReduceOp.SUM,
++                group=distributed.get_process_subgroup(),
++            )
++            norm_vec /= subgroup_size
++            norms = {name: norm_vec[i] for i, name in enumerate(names)}
++
++        for name in names:
++            loss_dict[f"grad_norm/{name}"] = norms[name]
+ 
+         # Geometric mean target across guides with non-vanishing gradients.
+         valid_norms = [norms[n] for n in names if float(norms[n]) > eps]
+         if len(valid_norms) < 2:
+             # Nothing meaningful to equalize against; fall back to plain sum.
++            # Write the same keys as the normalized path so `loss_dict` has
++            # the same length on every rank.
++            loss_dict["grad_norm/target"] = torch.tensor(0.0, device=device)
++            for name in names:
++                loss_dict[f"grad_norm/{name}_scale"] = torch.tensor(1.0, device=device)
+             return sum(per_guide_weighted.values())
+ 
+         log_sum = sum(torch.log(n + 1e-12) for n in valid_norms)

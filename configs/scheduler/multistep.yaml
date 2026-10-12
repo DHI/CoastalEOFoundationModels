@@ -1,0 +1,6 @@
+# MultiStepLR as in the reference implementation, stepped per epoch. Milestones are
+# absolute epochs.
+name: MultiStepLR
+hparams:
+  milestones: [45, 65]
+  gamma: 0.1

@@ -1,0 +1,13 @@
+# @package _global_
+# DINOv3 + UperNet, frozen backbone, on synthetic RGB data.
+defaults:
+  - override /data: dummy_rgb
+  - override /model: dinov3_upernet
+  - override /trainer: default
+  - _self_
+
+trainer:
+  max_epochs: 20
+
+model:
+  freeze_backbone: true

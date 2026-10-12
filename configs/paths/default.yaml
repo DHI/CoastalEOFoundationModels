@@ -1,0 +1,4 @@
+# Datasets: $AQUAFM_DATA_ROOT, else data/ in the launch directory.
+data_root: ${oc.env:AQUAFM_DATA_ROOT,${hydra:runtime.cwd}/data}
+# Manually downloaded weights (DINOv3, adapted ViT-B/16): $AQUAFM_WEIGHTS_ROOT, else weights/.
+weights_root: ${oc.env:AQUAFM_WEIGHTS_ROOT,${hydra:runtime.cwd}/weights}

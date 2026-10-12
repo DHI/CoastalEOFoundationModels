@@ -1,0 +1,39 @@
+# DINOv3 ViT-S/16 + 4-level feature pyramid + UperNet decoder.
+_target_: aquafm.tasks.AquaSegmentationTask
+model_factory: EncoderDecoderFactory
+model_args:
+  backbone: dinov3_vits16
+  backbone_kwargs:
+    ckpt_path: null
+    # TerraTorch's DinoV3Wrapper appends the cls token last, while ReshapeTokensToImage
+    # would strip the first token, so return patch tokens only.
+    return_cls_token: false
+  necks:
+    - name: SelectIndices
+      indices: [2, 5, 8, 11]
+    - name: ReshapeTokensToImage
+      remove_cls_token: false
+    - name: LearnedInterpolateToPyramidal
+  decoder: UperNetDecoder
+  num_classes: ${data.num_classes}
+loss: ce
+# -1 marks unannotated pixels.
+ignore_index: -1
+class_names: ${oc.select:data.class_names}
+class_weights: ${oc.select:data.class_weights}
+lr: 1.0e-4
+# Per-parameter-group LRs, matched by substring of the parameter name.
+lr_overrides: null
+optimizer: ${optimizer.name}
+optimizer_hparams: ${optimizer.hparams}
+scheduler: ${scheduler.name}
+scheduler_hparams: ${scheduler.hparams}
+freeze_backbone: false
+freeze_decoder: false
+plot_on_val: false
+
+# Test-time options, see aquafm.tasks.segmentation.
+tta: false
+tta_aggregation: vote
+extended_per_class_metrics: false
+confusion_matrix: false

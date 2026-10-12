@@ -1,0 +1,4 @@
+# Adam without weight decay, as in the reference implementation (`marinext/train.py`).
+name: Adam
+hparams:
+  weight_decay: 0.0

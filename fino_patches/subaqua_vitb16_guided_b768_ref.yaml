@@ -1,0 +1,302 @@
+# Continued self-supervised training of DINOv3 ViT-B/16 on the unlabeled tropical coastal
+# Sentinel-2 corpus; the config of the released adapted checkpoint.
+# Derived from `dinov3/configs/train/vitl16_fmow_guided.yaml` (FiNo branch, commit 81aae9a);
+# deviations are marked CHANGED. Copy into the clone's dinov3/configs/train/ and launch with
+# scripts/train_adaptation.sh (see fino_patches/README.md).
+# Trained on 2 GPUs x batch 768 (global 1536, half the reference's; ~69 GB per card) for
+# 25 000 iterations. Schedule knobs are iteration-indexed; an "epoch" is 1250 iterations.
+# Values marked <from manifest> come from corpus/config_fragment.yaml
+# (scripts/build_bundle_manifest.py).
+
+MODEL:
+  META_ARCHITECTURE: GuidedSSLMetaArch
+  DEVICE: cuda
+  WEIGHTS: ''
+  DTYPE: float32
+
+compute_precision:
+  param_dtype: bf16
+  reduce_dtype: fp32
+  sharding_strategy: SHARD_GRAD_OP
+
+dino:
+  loss_weight: 1.0
+  global_ignore_diagonal: true
+  head_n_prototypes: 65536
+  head_bottleneck_dim: 256
+  head_norm_last_layer: false
+  head_nlayers: 3
+  head_hidden_dim: 2048
+  koleo_loss_weight: 0.1     # Disabled at run time because sigreg.koleo_too=false.
+  koleo_loss_distributed: false
+  koleo_topk: 1
+  koleo_distributed_replicas: 0
+  koleo_distributed_loss_group_size: null
+  koleo_distributed_loss_group_data: true
+  force_weight_norm: false
+  reweight_dino_local_loss: false
+  local_loss_weight_schedule:
+    start: 0.5
+    peak: 0.5
+    end: 0.5
+    warmup_epochs: 0
+
+ibot:
+  loss_weight: 1.0
+  mask_sample_probability: 0.5
+  mask_ratio_min_max:
+  - 0.1
+  - 0.5
+  mask_random_circular_shift: false
+  force_masking_even_with_zero_weight: false
+  separate_head: true
+  head_n_prototypes: 65536
+  head_bottleneck_dim: 256
+  head_norm_last_layer: false
+  head_nlayers: 3
+  head_hidden_dim: 2048
+
+sigreg:
+  enabled: true
+  mode: bottleneck
+  loss_weight: 0.05
+  num_slices: 1024
+  range_max: 5.0
+  n_knots: 17
+  koleo_too: false
+
+gram:
+  use_loss: false
+  compute_stats: false
+  loss_weight: 1.0
+  ema_teacher: false
+  ckpt: null
+  it_load_ema_teacher: -1
+  rep_update: true
+  update_frequency: 50000
+  it_first_update: 0
+  max_updates: null
+  normalized: true
+  img_level: false
+  remove_neg: false
+  remove_only_teacher_neg: false
+  tokens_used: all
+  global_teacher_resize_method: bicubic
+  global_teacher_resize_antialias: false
+  loss_weight_schedule: null
+
+guide:
+  enabled: true
+  lambda_schedule:
+    type: sigmoid
+    warmup_iterations: 0
+  # CHANGED: FMoW's `sub_region` becomes `tile` (MGRS tile); `year` stays adversarial.
+  # Names must match `SubAqua._Metadata` fields holding integer vocabulary indices.
+  # List entries are not struct-checked: a misspelled key is ignored.
+  guides:
+  # Auxiliary guide (no GRL); its loss is zero with a single tile.
+  - name: tile
+    enabled: true
+    method: prototypical
+    hidden_dim: [512, 512, 256]
+    dropout: 0.5
+    loss_weight: 0.03
+    n_outputs: 65              # <from manifest> guide_cardinalities.tile
+    grl: false
+    grl_space: embedding
+    use_bce: false
+    output_activation: none
+    target_normalization:
+      output_min: null
+      output_max: null
+    proto_temperature: 0.02333
+    proto_centroid_momentum: 0.999
+    proto_phi_min: 0.01
+  # Adversarial guide: the GRL discourages encoding acquisition date in the CLS embedding.
+  - name: year
+    enabled: true
+    method: prototypical
+    hidden_dim: [512, 512, 256]
+    dropout: 0.5
+    loss_weight: 0.03
+    n_outputs: 9               # <from manifest> guide_cardinalities.year, 2017-2025 (16 for FMoW)
+    grl: true
+    grl_space: embedding
+    use_bce: false
+    output_activation: none
+    target_normalization:
+      output_min: null
+      output_max: null
+    proto_temperature: 0.02333
+    proto_centroid_momentum: 0.999
+    proto_phi_min: 0.01
+
+train:
+  batch_size_per_gpu: 768      # CHANGED from 96: 2 GPUs x 768 => global batch 1536.
+                               # Needs a /dev/shm well above 64 MB (~1.6 GB per rank per step).
+  # CHANGED: the SubAqua dataset from fino_patches/register_subaqua.patch. The guide heads
+  # need `with_metadata=true`. AQUAFM_DATA_ROOT is the directory containing S2_unlabeled/.
+  dataset_path: SubAqua:root=${oc.env:AQUAFM_DATA_ROOT,data}/S2_unlabeled:split=TRAIN:with_metadata=true
+  output_dir: <OUTPUT/DIR>     # Overridden by --output-dir on the command line.
+  saveckp_freq: 20
+  seed: 0
+  num_workers: 10              # Per rank.
+  OFFICIAL_EPOCH_LENGTH: 1250
+  monitor_gradient_norm: false
+  chunk_schedule: []
+  cache_dataset: true          # Selects the SHARDED_INFINITE sampler; not a RAM cache.
+  use_teacher_head: true
+  learn_from_teacher_tokens: false
+  centering: sinkhorn_knopp
+  checkpointing: true
+  checkpointing_full: true
+  compile: true                # Worth ~1.85x on ViT-B.
+  cudagraphs: false
+  sharded_eval_checkpoint: false
+
+student:
+  arch: vit_base               # CHANGED: was vit_large.
+  patch_size: 16
+  drop_path_rate: 0.1
+  layerscale: 1.0e-05
+  pretrained_weights: ''
+  ffn_layer: mlp
+  ffn_ratio: 4.0
+  # CHANGED: the converted warm start, from `python -m aquafm.adaptation.dinov3_checkpoint
+  # to-fino`. The loader is non-strict: a file in the wrong layout leaves the init random.
+  resume_from_teacher_chkpt: weights/fino/dinov3_vitb16_lvd1689m_teacher.pth
+  qkv_bias: true
+  proj_bias: true
+  ffn_bias: true
+  norm_layer: layernorm
+  n_storage_tokens: 4
+  untie_cls_and_patch_norms: false
+  # true only for a warm start from the sat493m ViT-L (which has local_cls_norm.* tensors).
+  untie_global_and_local_cls_norm: false
+  # CHANGED from false: released DINOv3 backbones use mask_k_bias=True, and the export
+  # round trip fails without it.
+  mask_k_bias: true
+  in_chans: 3                  # RGB only; `expand_patch_embed` is not used.
+  pos_embed_type: ropenew
+  pos_embed_rope_base: 100.0
+  pos_embed_rope_min_period: null
+  pos_embed_rope_max_period: null
+  pos_embed_rope_normalize_coords: separate
+  pos_embed_rope_shift_coords: null
+  pos_embed_rope_jitter_coords: null
+  pos_embed_rope_rescale_coords: 2.0
+  pos_embed_rope_dtype: bf16
+  fp8_enabled: false
+  fp8_filter: blocks
+
+teacher:
+  momentum_teacher: 0.994
+  final_momentum_teacher: 1.0
+  warmup_teacher_temp: 0.04
+  teacher_temp: 0.07
+  warmup_teacher_temp_epochs: 0
+  in_chans: 3
+
+distillation:
+  enabled: false
+  full_cfg_path: ''
+  checkpoint_path: ''
+
+multidistillation:
+  enabled: false
+
+hrft:
+  enabled: false
+  checkpoint_path: ''
+
+optim:
+  epochs: 20             # The reference's value: 20 x 1250 = 25 000 iterations. Every
+                         # schedule knob is in iterations; scale them together.
+  optimizer: adamw
+  weight_decay: 0.04
+  weight_decay_end: 0.04
+  lr: 5.0e-05            # Ignored when schedules.lr is set (v2 takes precedence).
+  warmup_epochs: 0
+  min_lr: 5.0e-05
+  schedule_trunc_extra: 0.0
+  clip_grad: 3.0
+  freeze_last_layer_epochs: 0
+  scaling_rule: sqrt_wrt_1024
+  patch_embed_lr_mult: 0.2
+  dino_head_wd_multiplier: 1.0
+  layerwise_decay: 0.9
+  multi_tensor_optim: true
+  dump_fsdp_weights_path: ''
+  adamw_beta1: 0.9
+  adamw_beta2: 0.999
+  grad_norm_normalization: false   # CHANGED from the reference's `true`, which never
+                                   # engaged in this run. Enabling it needs
+                                   # guide_gradnorm_sync.patch (multi-GPU).
+
+crops:
+  global_crops_scale:
+  - 0.4
+  - 1.0
+  local_crops_number: 8
+  local_crops_scale:
+  - 0.05
+  - 0.4
+  global_crops_size: 224       # The corpus patch size.
+  local_crops_size: 96
+  global_local_crop_pairs_ratios: 1.0
+  gram_teacher_crops_size: null
+  localcrops_subset_of_globalcrops: false
+  share_color_jitter: false
+  horizontal_flips: true
+  gram_teacher_no_distortions: false
+  # CHANGED: corpus statistics in 0..1 units (FiNo normalizes after scaling).
+  rgb_mean: [0.2135, 0.4032, 0.4288]   # <from manifest> 65 tiles, 188,857 patches
+  rgb_std: [0.2423, 0.2787, 0.2729]    # <from manifest> 65 tiles, 188,857 patches
+  teacher_to_student_resolution_scale: 1.0
+
+evaluation:
+  # Only sets the export cadence: a teacher checkpoint under <output>/eval/<iter>/.
+  eval_period_iterations: 2500
+  low_freq_every: 5
+  config_files:
+    high_freq: benchmark_high_frequency.yaml
+    low_freq: benchmark_low_frequency.yaml
+
+checkpointing:
+  # CHANGED from 1500: resume checkpoints only; no effect on training.
+  period: 250
+  max_to_keep: 2
+  keep_every: 99999999999999999
+
+# Schedules v2 (iteration-aware), required for the two-stage finetune knobs.
+schedules:
+  lr:
+    start: 0.0
+    peak: 5.0e-05
+    end: 5.0e-05
+    warmup_iterations: 3000          # The reference's value.
+    freeze_last_layer_iterations: 450  # The reference's value.
+    cosine_iterations: 0             # peak == end, so the cosine reduces to a constant.
+    # Two-stage finetune: iteration-indexed, not scaled by OFFICIAL_EPOCH_LENGTH.
+    freeze_student_iterations: 10000   # The reference's value. Stage 1 is iters 0..10000.
+                                      # Zeroes the backbone LR; gradients still flow.
+    backbone_warmup_after_freeze: 1000 # The reference's value. Stage 2 gets 14000 steps.
+    freeze_patch_embed: false
+    freeze_cls_token: true
+    freeze_mask_token: true
+    unfreeze_last_n_blocks: 0
+  weight_decay:
+    start: 0.04
+    peak: 0.04
+    end: 0.04
+    warmup_epochs: 0
+  momentum:
+    start: 0.994
+    peak: 0.994
+    end: 1.0
+    warmup_epochs: 0
+  teacher_temp:
+    start: 0.04
+    peak: 0.07
+    end: 0.07
+    warmup_epochs: 0

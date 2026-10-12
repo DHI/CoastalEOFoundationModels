@@ -1,0 +1,41 @@
+# Prithvi-EO ViT-B + 4-level feature pyramid + UperNet decoder.
+_target_: aquafm.tasks.AquaSegmentationTask
+model_factory: EncoderDecoderFactory
+model_args:
+  backbone: prithvi_vit
+  backbone_kwargs:
+    variant: prithvi_eo_v2_100_tl
+    pretrained: false
+    # HLS band names in the order the data emits them; selects the patch-embedding weights.
+    bands: [RED, GREEN, BLUE]
+    wavelengths: ${oc.select:data.band_wavelengths}
+    out_indices: [2, 5, 8, 11]
+    # Final LayerNorm on every returned layer, as DINOv3's features are normalized.
+    apply_norm: true
+  necks:
+    - name: ReshapeTokensToImage
+      remove_cls_token: true
+    - name: LearnedInterpolateToPyramidal
+  decoder: UperNetDecoder
+  num_classes: ${data.num_classes}
+loss: ce
+# -1 marks unannotated pixels.
+ignore_index: -1
+class_names: ${oc.select:data.class_names}
+class_weights: ${oc.select:data.class_weights}
+lr: 1.0e-4
+# Per-parameter-group LRs, matched by substring of the parameter name.
+lr_overrides: null
+optimizer: ${optimizer.name}
+optimizer_hparams: ${optimizer.hparams}
+scheduler: ${scheduler.name}
+scheduler_hparams: ${scheduler.hparams}
+freeze_backbone: false
+freeze_decoder: false
+plot_on_val: false
+
+# Test-time options, see aquafm.tasks.segmentation.
+tta: false
+tta_aggregation: vote
+extended_per_class_metrics: false
+confusion_matrix: false

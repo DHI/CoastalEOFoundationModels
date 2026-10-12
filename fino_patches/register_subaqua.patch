@@ -1,0 +1,37 @@
+diff --git a/dinov3/data/datasets/__init__.py b/dinov3/data/datasets/__init__.py
+index 1bbc5b8..c4f60c3 100644
+--- a/dinov3/data/datasets/__init__.py
++++ b/dinov3/data/datasets/__init__.py
+@@ -10,3 +10,4 @@ from .hpa_whole_hr import HPAWholeHR
+ from .image_net import ImageNet
+ from .image_net_22k import ImageNet22k
+ from .nyu import NYU
++from .subaqua import SubAqua
+diff --git a/dinov3/data/loaders.py b/dinov3/data/loaders.py
+index e65fefd..01e2207 100644
+--- a/dinov3/data/loaders.py
++++ b/dinov3/data/loaders.py
+@@ -10,7 +10,7 @@ from typing import Any, Callable, List, Optional, TypeVar
+ import torch
+ from torch.utils.data import Sampler
+ 
+-from .datasets import ADE20K, CocoCaptions, FMoW, HPAWholeHR, ImageNet, ImageNet22k, NYU
++from .datasets import ADE20K, CocoCaptions, FMoW, HPAWholeHR, ImageNet, ImageNet22k, NYU, SubAqua
+ from .samplers import EpochSampler, InfiniteSampler, ShardedInfiniteSampler
+ 
+ logger = logging.getLogger("dinov3")
+@@ -80,6 +80,14 @@ def _parse_dataset_str(dataset_str: str):
+             kwargs["split"] = _Split[kwargs["split"]]
+         if "with_metadata" in kwargs:
+             kwargs["with_metadata"] = kwargs["with_metadata"].lower() in ("true", "1", "yes")
++    elif name == "SubAqua":
++        from .datasets.subaqua import _Split
++
++        class_ = SubAqua
++        if "split" in kwargs:
++            kwargs["split"] = _Split[kwargs["split"]]
++        if "with_metadata" in kwargs:
++            kwargs["with_metadata"] = kwargs["with_metadata"].lower() in ("true", "1", "yes")
+     elif name == "HPAWholeHR":
+         from .datasets.hpa_whole_hr import _Split
+ 

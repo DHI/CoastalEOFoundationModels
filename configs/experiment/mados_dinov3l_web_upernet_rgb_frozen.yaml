@@ -1,0 +1,21 @@
+# @package _global_
+# DINOv3 ViT-L/16 (LVD-1689M) + UperNet on MADOS RGB, frozen encoder.
+defaults:
+  - override /data: mados_rgb
+  - override /model: dinov3_upernet_large
+  - override /trainer: default
+  - _self_
+
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: true
+  # No effect while the encoder is frozen.
+  lr_overrides:
+    encoder: 2.0e-5
+  model_args:
+    backbone_kwargs:
+      ckpt_path: ${paths.weights_root}/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth

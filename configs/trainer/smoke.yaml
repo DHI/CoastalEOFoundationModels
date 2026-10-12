@@ -1,0 +1,10 @@
+# One train and val batch on CPU, to check that a config runs.
+_target_: lightning.pytorch.Trainer
+accelerator: cpu
+devices: 1
+fast_dev_run: true
+logger: false
+enable_checkpointing: false
+# Read by the scheduler configs.
+max_epochs: 1
+max_steps: 1

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this code, the adapted weights or the corpus, please cite the paper."
+title: "Coastal DINOv3: MADOS benchmark and in-domain adaptation"
+authors:
+  - family-names: Kondylatos
+    given-names: Spyros
+  - family-names: Simonsen
+    given-names: Nicklas
+license: Apache-2.0
+preferred-citation:
+  type: conference-paper
+  title: "Land-Pretrained Foundation Models Do Not Transfer to Shallow Water: A Coastal Benchmark and What In-Domain Adaptation Buys"
+  authors:
+    - family-names: Kondylatos
+      given-names: Spyros
+    - family-names: Simonsen
+      given-names: Nicklas
+  collection-title: "2nd Workshop on Advances in Representation Learning for Earth Observation (REO-2) at NeurIPS"
+  year: 2026

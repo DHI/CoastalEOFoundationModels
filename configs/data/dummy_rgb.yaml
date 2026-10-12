@@ -1,0 +1,12 @@
+# Synthetic 3-band (R, G, B) data; labels threshold (G - R) / (G + R).
+_target_: aquafm.data.datamodule.DummySegmentationDataModule
+num_channels: 3
+img_size: 224
+num_classes: 2
+batch_size: 4
+num_workers: 0
+num_train_samples: 64
+num_val_samples: 16
+num_test_samples: 16
+augment: true
+seed: ${seed}

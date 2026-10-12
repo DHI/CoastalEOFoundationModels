@@ -1,0 +1,17 @@
+# @package _global_
+# mados_baseline_unet with an ImageNet-pretrained encoder.
+defaults:
+  - override /data: mados_rgb
+  - override /model: baseline_unet
+  - override /trainer: default
+  - _self_
+
+# Batch size under `protocol=mados_reference` (the MADOS paper's U-Net batch size).
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  model_args:
+    pretrained: true

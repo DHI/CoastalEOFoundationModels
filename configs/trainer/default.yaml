@@ -1,0 +1,10 @@
+_target_: lightning.pytorch.Trainer
+accelerator: auto
+devices: auto
+max_epochs: 50
+max_steps: -1
+log_every_n_steps: 10
+# `true` raises on the non-deterministic backward of bilinear upsampling and adaptive
+# pooling in the decoders.
+deterministic: warn
+benchmark: false

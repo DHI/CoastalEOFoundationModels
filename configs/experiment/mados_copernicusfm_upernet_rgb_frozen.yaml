@@ -1,0 +1,20 @@
+# @package _global_
+# CopernicusFM ViT-B + UperNet on MADOS RGB, frozen encoder.
+defaults:
+  - override /data: mados_rgb
+  - override /model: copernicusfm_upernet
+  - override /trainer: default
+  - _self_
+
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: true
+  lr_overrides: null
+  model_args:
+    backbone_kwargs:
+      pretrained: true
+      out_indices: [2, 5, 8, 11]

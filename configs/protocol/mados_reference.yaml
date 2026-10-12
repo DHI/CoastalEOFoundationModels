@@ -1,0 +1,21 @@
+# @package _global_
+# MADOS reference recipe: VSCP copy-paste, 8-view TTA with voting, EMA 0.999 without early
+# stopping, Adam at lr 2e-4, MultiStepLR [45, 65], 80 epochs. The batch size is the
+# experiment's `reference_batch_size` (default 5).
+defaults:
+  - override /callbacks: reference
+  - override /optimizer: adam
+  - override /scheduler: multistep
+  - _self_
+
+trainer:
+  max_epochs: 80
+
+data:
+  vscp: true
+  batch_size: ${oc.select:reference_batch_size,5}
+
+model:
+  lr: 2.0e-4
+  tta: true
+  tta_aggregation: vote

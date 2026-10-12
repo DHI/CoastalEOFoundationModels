@@ -1,0 +1,20 @@
+# @package _global_
+# Supervised ImageNet ViT-B/16 + UperNet on MADOS RGB, fine-tuned.
+defaults:
+  - override /data: mados_rgb
+  - override /model: baseline_vit_upernet
+  - override /trainer: default
+  - _self_
+
+# Batch size under `protocol=mados_reference`, shared by all MADOS experiments.
+reference_batch_size: 15
+
+trainer:
+  max_epochs: 80
+
+model:
+  freeze_backbone: false
+  lr_overrides: null
+  model_args:
+    backbone_kwargs:
+      pretrained: true
