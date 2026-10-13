@@ -92,24 +92,25 @@ All paper runs use `protocol=mados_reference`, which follows the MADOS reference
 implementation ([gkakogeorgiou/mados](https://github.com/gkakogeorgiou/mados)): Adam (lr 2e-4),
 MultiStepLR at epochs 45 and 65, 80 epochs, EMA 0.999, VSCP copy-paste augmentation, 8-view
 test-time augmentation with majority vote, batch size 15, fp32. We report the test mIoU of the
-checkpoint with the best validation mIoU, from a single seed per arm; seed-to-seed variation on
-MADOS is large because rare classes alternate between zero and high IoU.
+checkpoint with the best validation mIoU, as mean ± sample std over seeds 0–2 (`seed=0,1,2`)
+unless marked; seed-to-seed variation on MADOS is large because rare classes alternate between
+zero and high IoU.
 
 | Arm | Experiment | Test mIoU |
 |---|---|---|
-| U-Net, random init | `mados_baseline_unet` | 0.383 |
-| U-Net, ImageNet | `mados_baseline_unet_imagenet` | 0.619 |
-| ViT-B/16, ImageNet | `mados_baseline_vitb_upernet_rgb` | 0.547 |
-| CopernicusFM ViT-B | `mados_copernicusfm_upernet_rgb_frozen` | 0.673 |
-| Prithvi-EO-2.0 100M | `mados_prithvi_upernet_rgb_frozen` | 0.571 |
-| DINOv3 ViT-L/16 SAT-493M | `mados_dinov3l_sat_upernet_rgb_frozen` | 0.715 |
-| DINOv3 ViT-L/16 LVD-1689M | `mados_dinov3l_web_upernet_rgb_frozen` | 0.730 |
-| DINOv3 ViT-B/16 LVD-1689M | `mados_dinov3b_upernet_rgb_frozen` | 0.712 |
-| DINOv3 ViT-B/16, adapted | `mados_dinov3b_upernet_rgb_adapted_frozen` | 0.717 |
-| DINOv3 ViT-B/16 LVD-1689M, fine-tuned | `mados_dinov3b_upernet_rgb` | 0.770 |
-| DINOv3 ViT-B/16, adapted, fine-tuned | `mados_dinov3b_upernet_rgb_adapted` | 0.805 |
+| U-Net, random init | `mados_baseline_unet` | 0.383¹ |
+| U-Net, ImageNet | `mados_baseline_unet_imagenet` | 0.605 ± 0.017 |
+| ViT-B/16, ImageNet | `mados_baseline_vitb_upernet_rgb` | 0.527 ± 0.040 |
+| CopernicusFM ViT-B | `mados_copernicusfm_upernet_rgb_frozen` | 0.684 ± 0.010 |
+| Prithvi-EO-2.0 100M | `mados_prithvi_upernet_rgb_frozen` | 0.571¹ |
+| DINOv3 ViT-L/16 SAT-493M | `mados_dinov3l_sat_upernet_rgb_frozen` | 0.716 ± 0.013 |
+| DINOv3 ViT-L/16 LVD-1689M | `mados_dinov3l_web_upernet_rgb_frozen` | 0.731 ± 0.011 |
+| DINOv3 ViT-B/16 LVD-1689M | `mados_dinov3b_upernet_rgb_frozen` | 0.712 ± 0.006 |
+| DINOv3 ViT-B/16, adapted | `mados_dinov3b_upernet_rgb_adapted_frozen` | 0.730 ± 0.021 |
+| DINOv3 ViT-B/16 LVD-1689M, fine-tuned | `mados_dinov3b_upernet_rgb` | 0.770¹ |
+| DINOv3 ViT-B/16, adapted, fine-tuned | `mados_dinov3b_upernet_rgb_adapted` | 0.805¹ |
 
-Encoders are frozen unless marked fine-tuned.
+Encoders are frozen unless marked fine-tuned. ¹ Single seed.
 
 ## Domain adaptation
 
