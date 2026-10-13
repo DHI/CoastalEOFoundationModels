@@ -16,15 +16,17 @@ Authors: Spyros Kondylatos, Nicklas Simonsen (DHI).
 | Resource | Link |
 |---|---|
 | Paper | `<PAPER_URL>` |
-| Adapted DINOv3 ViT-B/16 weights | [Hugging Face](https://huggingface.co/<HF_REPO_ID>) ([model card](MODEL_CARD.md)) |
+| Adapted DINOv3 ViT-B/16 weights | [GitHub release v0.1.0](https://github.com/DHI/CoastalEOFoundationModels/releases/tag/v0.1.0) ([model card](MODEL_CARD.md)) |
 | Unlabeled tropical coastal corpus | [Zenodo](https://zenodo.org/records/23313478) ([dataset card](corpus/DATASET_CARD.md)) |
 | MADOS | [Zenodo](https://zenodo.org/records/10664073) |
 
 > **License.** The code is released under [Apache-2.0](LICENSE). The adapted weights,
 > `fino_patches/` and `src/aquafm/adaptation/vision_dataset.py` are derivatives of Meta's
-> DINOv3 and are released under the [DINOv3 License](LICENSE-DINOv3.md). Built with DINOv3. 
+> DINOv3 and are released under the [DINOv3 License](LICENSE-DINOv3.md). Built with DINOv3.
 > Use and redistribution of these components must comply with the DINOv3 License, including
-> its trade-control and use restrictions. The corpus is released under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+> its trade-control and use restrictions.
+>
+> The corpus is released under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 
 ## Installation
 
@@ -71,7 +73,7 @@ run `python scripts/build_bundle_manifest.py --root $AQUAFM_DATA_ROOT/S2_unlabel
   `dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth` and
   `dinov3_vitl16_pretrain_sat493m-eadcf0ff.pth` in `$AQUAFM_WEIGHTS_ROOT` under Meta's filenames.
 - Adapted DINOv3 ViT-B/16: `python scripts/download_weights.py` downloads the checkpoint
-  from [Hugging Face](https://huggingface.co/<HF_REPO_ID>) and verifies its SHA-256.
+  from the [v0.1.0 release](https://github.com/DHI/CoastalEOFoundationModels/releases/tag/v0.1.0) and verifies its SHA-256.
 - CopernicusFM and Prithvi are downloaded on first use.
 
 ## Benchmark

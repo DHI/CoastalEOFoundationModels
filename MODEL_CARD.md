@@ -10,7 +10,7 @@ key layout as Meta's `dinov3_vitb16_pretrain_lvd1689m` checkpoint and loads the 
 |---|---|
 | Developed by | Spyros Kondylatos, Nicklas Simonsen (DHI) |
 | Paper | Land-Pretrained Foundation Models Do Not Transfer to Shallow Water (REO-2 at NeurIPS 2026) |
-| Download | [Hugging Face](https://huggingface.co/<HF_REPO_ID>), or `python scripts/download_weights.py` |
+| Download | [GitHub release v0.1.0](https://github.com/DHI/CoastalEOFoundationModels/releases/tag/v0.1.0), or `python scripts/download_weights.py` |
 | SHA-256 | `5aef9a9bba55e32bdca00ef34f494c4c93f5b5718dd632249b3002289899c0b3` |
 | Size | 343 MB |
 | Architecture | ViT-B/16, 86 M parameters, 4 register tokens, RoPE, `mask_k_bias=True` |
@@ -64,10 +64,8 @@ data is tropical, and the benefit outside that domain is small.
 
 ```python
 import torch
-from huggingface_hub import hf_hub_download
-
-weights = hf_hub_download("<HF_REPO_ID>", "dinov3_vitb16_subaqua_adapted.pth")
-model = torch.hub.load("facebookresearch/dinov3", "dinov3_vitb16", weights=weights)
+model = torch.hub.load("facebookresearch/dinov3", "dinov3_vitb16",
+                       weights="weights/dinov3_vitb16_subaqua_adapted.pth")
 ```
 
 In this repository, `experiment=mados_dinov3b_upernet_rgb_adapted_frozen` and
